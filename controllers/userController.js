@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken")
 const getEmailMsgTemplate = require("../utils/getEmailMsgTemplate")
 const getButtonTemplate = require("../utils/getButtonTemplate")
 const sendMail = require("../utils/sendMail")
+
 const signup2 = async (req, res) => {
   const {
     name,
@@ -75,5 +76,19 @@ const signup2 = async (req, res) => {
 
   res.status(201).json({ status: true, message: "signup successful", user })
 }
-
-module.exports = { signup2 }
+const deleteUser = async (req, res) => {
+  const { email } = req.body
+  if (!email) {
+    throw new BadRequestError("please provide user id")
+  }
+  const user = await UserModel.findOne({
+    email: email,
+  })
+  console.log(user)
+  if (!user) {
+    throw new NotFoundError("no user with this id")
+  }
+  const deletedUser = await UserModel.findByIdAndDelete(user._id)
+  res.status(200).json({ status: true, msg: "user deleted successfully" })
+}
+module.exports = { signup2, deleteUser }
