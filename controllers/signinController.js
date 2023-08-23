@@ -14,7 +14,8 @@ const send_otp = async (req, res) => {
     throw new BadRequestError("please provide email")
   }
   const user = await UserModel.findOne({ email })
-
+if(!user){
+throw new NotFoundError("user does not exist")}
   const otp = Math.floor(100000 + Math.random() * 900000)
 
   const values = {
