@@ -29,18 +29,26 @@ const signup2 = async (req, res) => {
   if (!name || !email) {
     throw new BadRequestError("please provide all values")
   }
+
+  const [localPart, domainPart] = email.split("@")
+  const lowercaseLocalPart = localPart.toLowerCase()
+  const lowercaseEmail = `${lowercaseLocalPart}@${domainPart}`
+
   // check if user already exists
-  const userAlreadyExist = await UserModel.findOne({ email: email })
+  const userAlreadyExist = await UserModel.findOne({ email: lowercaseEmail })
 
   if (userAlreadyExist) {
     throw new BadRequestError("user already exist")
   }
 
-  const token = jwt.sign({ email, role }, process.env.JWT_SECRET)
+  const token = jwt.sign(
+    { email: lowercaseEmail, role },
+    process.env.JWT_SECRET
+  )
 
   const user = await UserModel.create({
     name,
-    email,
+    email: lowercaseEmail,
     contact_number,
     country,
     address,
@@ -72,7 +80,7 @@ const signup2 = async (req, res) => {
     `,
     name
   )
-  sendMail(email, subject, html)
+  sendMail(lowercaseEmail, subject, html)
 
   res.status(201).json({ status: true, message: "signup successful", user })
 }
@@ -81,10 +89,14 @@ const deleteUser = async (req, res) => {
   if (!email) {
     throw new BadRequestError("please provide user id")
   }
+  const [localPart, domainPart] = email.split("@")
+  const lowercaseLocalPart = localPart.toLowerCase()
+  const lowercaseEmail = `${lowercaseLocalPart}@${domainPart}`
+
   const user = await UserModel.findOne({
-    email: email,
+    email: lowercaseEmail,
   })
-  console.log(user)
+
   if (!user) {
     throw new NotFoundError("no user with this id")
   }

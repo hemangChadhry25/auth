@@ -13,13 +13,18 @@ const send_otp = async (req, res) => {
   if (!email) {
     throw new BadRequestError("please provide email")
   }
-  const user = await UserModel.findOne({ email })
-if(!user){
-throw new NotFoundError("user does not exist")}
+  const [localPart, domainPart] = email.split("@")
+  const lowercaseLocalPart = localPart.toLowerCase()
+  const lowercaseEmail = `${lowercaseLocalPart}@${domainPart}`
+
+  const user = await UserModel.findOne({ email: lowercaseEmail })
+  if (!user) {
+    throw new NotFoundError("user does not exist")
+  }
   const otp = Math.floor(100000 + Math.random() * 900000)
 
   const values = {
-    email: email,
+    email: lowercaseEmail,
     otp: otp,
     is_used: false,
     created_on: new Date(),
@@ -36,7 +41,7 @@ throw new NotFoundError("user does not exist")}
         `
     )
 
-    sendMail(email, subject, html)
+    sendMail(lowercaseEmail, subject, html)
 
     return res.status(200).json({ status: true, message: "Otp sended to mail" })
   }
@@ -57,7 +62,11 @@ const verify_otp = async (req, res) => {
     })
   }
 
-  const data = await OtpModel.findOne({ email, otp })
+  const [localPart, domainPart] = email.split("@")
+  const lowercaseLocalPart = localPart.toLowerCase()
+  const lowercaseEmail = `${lowercaseLocalPart}@${domainPart}`
+
+  const data = await OtpModel.findOne({ email: lowercaseEmail, otp })
 
   if (!data) {
     return res.status(400).json({
